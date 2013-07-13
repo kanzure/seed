@@ -92,20 +92,20 @@ seed_gi_importer_is_init (GIFunctionInfo * info)
 
 static void
 seed_gi_importer_handle_function (JSContextRef ctx,
-				  JSObjectRef namespace_ref,
-				  GIFunctionInfo * info,
-				  JSValueRef * exception)
+                                  JSObjectRef namespace_ref,
+                                  GIFunctionInfo * info,
+                                  JSValueRef * exception)
 {
   if (!seed_gi_importer_is_init (info))
     seed_gobject_define_property_from_function_info (ctx,
-						     (GIFunctionInfo *) info,
-						     namespace_ref, FALSE);
+                                                     (GIFunctionInfo *) info,
+                                                     namespace_ref, FALSE);
   else
     {
       JSObjectRef init_method;
 
       init_method = JSObjectMake (ctx, gobject_init_method_class,
-				  g_base_info_ref ((GIBaseInfo *) info));
+                                  g_base_info_ref ((GIBaseInfo *) info));
       seed_object_set_property (ctx, namespace_ref, "init", init_method);
     }
 }
@@ -118,8 +118,8 @@ seed_gi_importer_handle_function (JSContextRef ctx,
  */
 static void
 seed_gi_importer_handle_enum (JSContextRef ctx,
-			      JSObjectRef namespace_ref,
-			      GIEnumInfo * info, JSValueRef * exception)
+                              JSObjectRef namespace_ref,
+                              GIEnumInfo * info, JSValueRef * exception)
 {
   JSObjectRef enum_class;
   guint num_vals, i, j;
@@ -131,8 +131,8 @@ seed_gi_importer_handle_enum (JSContextRef ctx,
   enum_class = JSObjectMake (ctx, 0, 0);
   num_vals = g_enum_info_get_n_values (info);
   seed_object_set_property (ctx, namespace_ref,
-			    g_base_info_get_name ((GIBaseInfo *) info),
-			    enum_class);
+                            g_base_info_get_name ((GIBaseInfo *) info),
+                            enum_class);
 
   for (i = 0; i < num_vals; i++)
     {
@@ -146,11 +146,11 @@ seed_gi_importer_handle_enum (JSContextRef ctx,
       JSValueProtect (ctx, (JSValueRef) value_ref);
 
       for (j = 0; j < name_len; j++)
-	{
-	  if (name[j] == '-')
-	    name[j] = '_';
-	  name[j] = g_ascii_toupper (name[j]);
-	}
+        {
+          if (name[j] == '-')
+            name[j] = '_';
+          name[j] = g_ascii_toupper (name[j]);
+        }
 
       seed_object_set_property (ctx, enum_class, name, value_ref);
 
@@ -167,8 +167,8 @@ seed_gi_importer_handle_enum (JSContextRef ctx,
  */
 static void
 seed_gi_importer_handle_object (JSContextRef ctx,
-				JSObjectRef namespace_ref,
-				GIObjectInfo * info, JSValueRef * exception)
+                                JSObjectRef namespace_ref,
+                                GIObjectInfo * info, JSValueRef * exception)
 {
   GType type;
   JSClassRef class_ref;
@@ -185,55 +185,55 @@ seed_gi_importer_handle_object (JSContextRef ctx,
       class_ref = seed_gobject_get_class_for_gtype (ctx, type);
 
       constructor_ref =
-	JSObjectMake (ctx, gobject_constructor_class, (gpointer) type);
+        JSObjectMake (ctx, gobject_constructor_class, (gpointer) type);
 
       seed_object_set_property (ctx, constructor_ref,
-				"type",
-				seed_value_from_long (ctx, type, exception));
+                                "type",
+                                seed_value_from_long (ctx, type, exception));
       n_methods = g_object_info_get_n_methods (info);
       for (i = 0; i < n_methods; i++)
-	{
-	  finfo = g_object_info_get_method (info, i);
-	  flags = g_function_info_get_flags (finfo);
-	  if (flags & GI_FUNCTION_IS_CONSTRUCTOR)
-	    {
-	      JSObjectRef constructor = JSObjectMake (ctx,
-						      gobject_named_constructor_class,
-						      finfo);
-	      const gchar *fname =
-		g_base_info_get_name ((GIBaseInfo *) finfo);
-	      if (g_strrstr (fname, "new_") == fname)
-		fname += 4;
-	      else if (!g_strcmp0 (fname, "new"))
-		fname = "c_new";
+        {
+          finfo = g_object_info_get_method (info, i);
+          flags = g_function_info_get_flags (finfo);
+          if (flags & GI_FUNCTION_IS_CONSTRUCTOR)
+            {
+              JSObjectRef constructor = JSObjectMake (ctx,
+                                                      gobject_named_constructor_class,
+                                                      finfo);
+              const gchar *fname =
+                g_base_info_get_name ((GIBaseInfo *) finfo);
+              if (g_strrstr (fname, "new_") == fname)
+                fname += 4;
+              else if (!g_strcmp0 (fname, "new"))
+                fname = "c_new";
 
-	      seed_object_set_property (ctx,
-					constructor_ref, fname, constructor);
-	    }
-	  else if (!(flags & GI_FUNCTION_IS_METHOD))
-	    {
-	      seed_gobject_define_property_from_function_info
-		(ctx, finfo, constructor_ref, FALSE);
-	    }
-	  else
-	    {
-	      g_base_info_unref ((GIBaseInfo *) finfo);
-	    }
-	}
+              seed_object_set_property (ctx,
+                                        constructor_ref, fname, constructor);
+            }
+          else if (!(flags & GI_FUNCTION_IS_METHOD))
+            {
+              seed_gobject_define_property_from_function_info
+                (ctx, finfo, constructor_ref, FALSE);
+            }
+          else
+            {
+              g_base_info_unref ((GIBaseInfo *) finfo);
+            }
+        }
 
       seed_object_set_property (ctx, namespace_ref,
-				g_base_info_get_name ((GIBaseInfo *) info),
-				constructor_ref);
+                                g_base_info_get_name ((GIBaseInfo *) info),
+                                constructor_ref);
       seed_object_set_property (ctx, constructor_ref,
-				"prototype",
-				seed_gobject_get_prototype_for_gtype (type));
+                                "prototype",
+                                seed_gobject_get_prototype_for_gtype (type));
     }
 }
 
 static void
 seed_gi_importer_handle_iface (JSContextRef ctx,
-			       JSObjectRef namespace_ref,
-			       GIObjectInfo * info, JSValueRef * exception)
+                               JSObjectRef namespace_ref,
+                               GIObjectInfo * info, JSValueRef * exception)
 {
   GType type;
 
@@ -247,33 +247,33 @@ seed_gi_importer_handle_iface (JSContextRef ctx,
       guint i, n_methods;
 
       constructor_ref =
-	JSObjectMake (ctx, gobject_constructor_class, (gpointer) type);
+        JSObjectMake (ctx, gobject_constructor_class, (gpointer) type);
 
       seed_object_set_property (ctx, constructor_ref,
-				"type",
-				seed_value_from_long (ctx, type, exception));
+                                "type",
+                                seed_value_from_long (ctx, type, exception));
       n_methods = g_interface_info_get_n_methods (info);
       for (i = 0; i < n_methods; i++)
-	{
-	  finfo = g_interface_info_get_method (info, i);
-	  flags = g_function_info_get_flags (finfo);
-	  if (!(flags & GI_FUNCTION_IS_METHOD))
-	    {
-	      seed_gobject_define_property_from_function_info
-		(ctx, finfo, constructor_ref, FALSE);
-	    }
-	  else
-	    {
-	      g_base_info_unref ((GIBaseInfo *) finfo);
-	    }
-	}
+        {
+          finfo = g_interface_info_get_method (info, i);
+          flags = g_function_info_get_flags (finfo);
+          if (!(flags & GI_FUNCTION_IS_METHOD))
+            {
+              seed_gobject_define_property_from_function_info
+                (ctx, finfo, constructor_ref, FALSE);
+            }
+          else
+            {
+              g_base_info_unref ((GIBaseInfo *) finfo);
+            }
+        }
 
       seed_object_set_property (ctx, namespace_ref,
-				g_base_info_get_name ((GIBaseInfo *) info),
-				constructor_ref);
+                                g_base_info_get_name ((GIBaseInfo *) info),
+                                constructor_ref);
       seed_object_set_property (ctx, constructor_ref,
-				"prototype",
-				seed_gobject_get_prototype_for_gtype (type));
+                                "prototype",
+                                seed_gobject_get_prototype_for_gtype (type));
     }
 }
 
@@ -283,8 +283,8 @@ seed_gi_importer_handle_iface (JSContextRef ctx,
  */
 static void
 seed_gi_importer_handle_struct (JSContextRef ctx,
-				JSObjectRef namespace_ref,
-				GIStructInfo * info, JSValueRef * exception)
+                                JSObjectRef namespace_ref,
+                                GIStructInfo * info, JSValueRef * exception)
 {
   JSObjectRef struct_ref;
   JSObjectRef proto;
@@ -304,37 +304,37 @@ seed_gi_importer_handle_struct (JSContextRef ctx,
       flags = g_function_info_get_flags (finfo);
 
       if (flags & GI_FUNCTION_IS_CONSTRUCTOR)
-	{
-	  JSObjectRef constructor = JSObjectMake (ctx,
-						  gobject_named_constructor_class,
-						  finfo);
-	  const gchar *fname = g_base_info_get_name ((GIBaseInfo *) finfo);
-	  if (g_str_has_prefix (fname, "new_"))
-	    fname += 4;
-	  else if (!g_strcmp0 (fname, "new"))
-	    fname = "c_new";
+        {
+          JSObjectRef constructor = JSObjectMake (ctx,
+                                                  gobject_named_constructor_class,
+                                                  finfo);
+          const gchar *fname = g_base_info_get_name ((GIBaseInfo *) finfo);
+          if (g_str_has_prefix (fname, "new_"))
+            fname += 4;
+          else if (!g_strcmp0 (fname, "new"))
+            fname = "c_new";
 
-	  seed_object_set_property (ctx, struct_ref, fname, constructor);
-	}
+          seed_object_set_property (ctx, struct_ref, fname, constructor);
+        }
       else if (flags & GI_FUNCTION_IS_METHOD)
-	g_base_info_unref ((GIBaseInfo *) finfo);
+        g_base_info_unref ((GIBaseInfo *) finfo);
       else
-	seed_gobject_define_property_from_function_info
-	  (ctx, finfo, struct_ref, FALSE);
+        seed_gobject_define_property_from_function_info
+          (ctx, finfo, struct_ref, FALSE);
     }
 
   proto = seed_struct_prototype (ctx, (GIBaseInfo *) info);
   seed_object_set_property (ctx, struct_ref, "prototype", proto);
 
   seed_object_set_property (ctx, namespace_ref,
-			    g_base_info_get_name ((GIBaseInfo *) info),
-			    struct_ref);
+                            g_base_info_get_name ((GIBaseInfo *) info),
+                            struct_ref);
 }
 
 static void
 seed_gi_importer_handle_union (JSContextRef ctx,
-			       JSObjectRef namespace_ref,
-			       GIUnionInfo * info, JSValueRef * exception)
+                               JSObjectRef namespace_ref,
+                               GIUnionInfo * info, JSValueRef * exception)
 {
   JSObjectRef union_ref;
   JSObjectRef proto;
@@ -354,32 +354,32 @@ seed_gi_importer_handle_union (JSContextRef ctx,
       flags = g_function_info_get_flags (finfo);
 
       if (flags & GI_FUNCTION_IS_METHOD)
-	g_base_info_unref ((GIBaseInfo *) finfo);
+        g_base_info_unref ((GIBaseInfo *) finfo);
       else
-	seed_gobject_define_property_from_function_info
-	  (ctx, finfo, union_ref, FALSE);
+        seed_gobject_define_property_from_function_info
+          (ctx, finfo, union_ref, FALSE);
     }
 
   proto = seed_union_prototype (ctx, (GIBaseInfo *) info);
   seed_object_set_property (ctx, union_ref, "prototype", proto);
 
   seed_object_set_property (ctx, namespace_ref,
-			    g_base_info_get_name ((GIBaseInfo *) info),
-			    union_ref);
+                            g_base_info_get_name ((GIBaseInfo *) info),
+                            union_ref);
 }
 
 static void
 seed_gi_importer_handle_callback (JSContextRef ctx,
-				  JSObjectRef namespace_ref,
-				  GICallbackInfo * info,
-				  JSValueRef * exception)
+                                  JSObjectRef namespace_ref,
+                                  GICallbackInfo * info,
+                                  JSValueRef * exception)
 {
   JSObjectRef callback_ref = JSObjectMake (ctx,
-					   seed_callback_class,
-					   info);
+                                           seed_callback_class,
+                                           info);
   seed_object_set_property (ctx, namespace_ref,
-			    g_base_info_get_name ((GIBaseInfo *) info),
-			    (JSValueRef) callback_ref);
+                            g_base_info_get_name ((GIBaseInfo *) info),
+                            (JSValueRef) callback_ref);
 }
 
 /*
@@ -387,9 +387,9 @@ seed_gi_importer_handle_callback (JSContextRef ctx,
  */
 static void
 seed_gi_importer_handle_constant (JSContextRef ctx,
-				  JSObjectRef namespace_ref,
-				  GIConstantInfo * info,
-				  JSValueRef * exception)
+                                  JSObjectRef namespace_ref,
+                                  GIConstantInfo * info,
+                                  JSValueRef * exception)
 {
   GArgument argument;
   GITypeInfo *constant_type = g_constant_info_get_type (info);
@@ -399,15 +399,15 @@ seed_gi_importer_handle_constant (JSContextRef ctx,
   constant_value =
     seed_value_from_gi_argument (ctx, &argument, constant_type, exception);
   seed_object_set_property (ctx, namespace_ref,
-			    g_base_info_get_name ((GIBaseInfo *) info),
-			    constant_value);
+                            g_base_info_get_name ((GIBaseInfo *) info),
+                            constant_value);
 
   g_base_info_unref ((GIBaseInfo *) constant_type);
 }
 
 static gchar *
 seed_gi_importer_get_version (JSContextRef ctx,
-			      gchar * namespace, JSValueRef * exception)
+                              gchar * namespace, JSValueRef * exception)
 {
   JSValueRef version_ref;
   gchar *version = NULL;
@@ -422,7 +422,7 @@ seed_gi_importer_get_version (JSContextRef ctx,
 
 JSObjectRef
 seed_gi_importer_do_namespace (JSContextRef ctx,
-			       gchar * namespace, JSValueRef * exception)
+                               gchar * namespace, JSValueRef * exception)
 {
   GIBaseInfo *info;
   JSObjectRef namespace_ref;
@@ -438,7 +438,7 @@ seed_gi_importer_do_namespace (JSContextRef ctx,
   if ((namespace_ref = g_hash_table_lookup (gi_imports, namespace)))
     {
       SEED_NOTE (IMPORTER, "Using existing namespace ref (%p) for %s",
-		 namespace_ref, namespace);
+                 namespace_ref, namespace);
       return namespace_ref;
     }
 
@@ -458,7 +458,7 @@ seed_gi_importer_do_namespace (JSContextRef ctx,
 
   namespace_ref = JSObjectMake (ctx, NULL, NULL);
   SEED_NOTE (IMPORTER, "Constructing namespace ref (%p) for %s",
-	     namespace_ref, namespace);
+             namespace_ref, namespace);
 
   JSValueProtect (ctx, namespace_ref);
 
@@ -470,49 +470,49 @@ seed_gi_importer_do_namespace (JSContextRef ctx,
       info_type = g_base_info_get_type (info);
 
       switch (info_type)
-	{
-	case GI_INFO_TYPE_FUNCTION:
-	  seed_gi_importer_handle_function (ctx, namespace_ref,
-					    (GIFunctionInfo *) info,
-					    exception);
-	  break;
-	case GI_INFO_TYPE_ENUM:
-	case GI_INFO_TYPE_FLAGS:
-	  seed_gi_importer_handle_enum (ctx, namespace_ref,
-					(GIEnumInfo *) info, exception);
-	  break;
-	case GI_INFO_TYPE_OBJECT:
-	  seed_gi_importer_handle_object (ctx, namespace_ref,
-					  (GIObjectInfo *) info, exception);
-	  break;
-	case GI_INFO_TYPE_INTERFACE:
-	  seed_gi_importer_handle_iface (ctx, namespace_ref,
-					 (GIObjectInfo *) info, exception);
-	  break;
-	case GI_INFO_TYPE_STRUCT:
-	  seed_gi_importer_handle_struct (ctx, namespace_ref,
-					  (GIStructInfo *) info, exception);
-	  break;
-	case GI_INFO_TYPE_UNION:
-	  seed_gi_importer_handle_union (ctx, namespace_ref,
-					 (GIUnionInfo *) info, exception);
-	  break;
-	case GI_INFO_TYPE_CALLBACK:
-	  seed_gi_importer_handle_callback (ctx, namespace_ref,
-					    (GICallbackInfo *) info,
-					    exception);
-	  break;
-	case GI_INFO_TYPE_CONSTANT:
-	  seed_gi_importer_handle_constant (ctx, namespace_ref,
-					    (GIConstantInfo *) info,
-					    exception);
-	  break;
-	default:
-	  SEED_NOTE (IMPORTER, "Unhandled type %s for %s",
-	             g_info_type_to_string (info_type),
-	             g_base_info_get_name (info));
-	  break;
-	}
+        {
+        case GI_INFO_TYPE_FUNCTION:
+          seed_gi_importer_handle_function (ctx, namespace_ref,
+                                            (GIFunctionInfo *) info,
+                                            exception);
+          break;
+        case GI_INFO_TYPE_ENUM:
+        case GI_INFO_TYPE_FLAGS:
+          seed_gi_importer_handle_enum (ctx, namespace_ref,
+                                        (GIEnumInfo *) info, exception);
+          break;
+        case GI_INFO_TYPE_OBJECT:
+          seed_gi_importer_handle_object (ctx, namespace_ref,
+                                          (GIObjectInfo *) info, exception);
+          break;
+        case GI_INFO_TYPE_INTERFACE:
+          seed_gi_importer_handle_iface (ctx, namespace_ref,
+                                         (GIObjectInfo *) info, exception);
+          break;
+        case GI_INFO_TYPE_STRUCT:
+          seed_gi_importer_handle_struct (ctx, namespace_ref,
+                                          (GIStructInfo *) info, exception);
+          break;
+        case GI_INFO_TYPE_UNION:
+          seed_gi_importer_handle_union (ctx, namespace_ref,
+                                         (GIUnionInfo *) info, exception);
+          break;
+        case GI_INFO_TYPE_CALLBACK:
+          seed_gi_importer_handle_callback (ctx, namespace_ref,
+                                            (GICallbackInfo *) info,
+                                            exception);
+          break;
+        case GI_INFO_TYPE_CONSTANT:
+          seed_gi_importer_handle_constant (ctx, namespace_ref,
+                                            (GIConstantInfo *) info,
+                                            exception);
+          break;
+        default:
+          SEED_NOTE (IMPORTER, "Unhandled type %s for %s",
+                     g_info_type_to_string (info_type),
+                     g_base_info_get_name (info));
+          break;
+        }
       g_base_info_unref (info);
     }
 
@@ -531,9 +531,9 @@ seed_gi_importer_do_namespace (JSContextRef ctx,
 
 static JSValueRef
 seed_gi_importer_get_property (JSContextRef ctx,
-			       JSObjectRef object,
-			       JSStringRef property_name,
-			       JSValueRef * exception)
+                               JSObjectRef object,
+                               JSStringRef property_name,
+                               JSValueRef * exception)
 {
   JSObjectRef ret;
   guint len;
@@ -550,13 +550,13 @@ seed_gi_importer_get_property (JSContextRef ctx,
   // Nasty hack
   else if (!g_strcmp0 (prop, "toString"))
     return 0;
-  if (!g_strcmp0 (prop, "valueOf"))	// HACK
+  if (!g_strcmp0 (prop, "valueOf"))        // HACK
     return NULL;
 
 
   ret = seed_gi_importer_do_namespace (ctx, prop, exception);
   SEED_NOTE (IMPORTER, "Result (%p) from attempting to import %s: %s",
-	     ret, prop, seed_value_to_string (ctx, ret, exception));
+             ret, prop, seed_value_to_string (ctx, ret, exception));
 
   return ret;
 }
@@ -611,7 +611,7 @@ seed_importer_get_search_path (JSContextRef ctx, JSValueRef * exception)
   if (!JSValueIsObject (ctx, search_path_ref))
     {
       seed_make_exception (ctx, exception, "ArgumentError",
-			   "Importer searchPath object is not an array");
+                           "Importer searchPath object is not an array");
       return NULL;
     }
 
@@ -624,8 +624,8 @@ seed_importer_get_search_path (JSContextRef ctx, JSValueRef * exception)
       JSValueRef entry_ref;
 
       entry_ref =
-	JSObjectGetPropertyAtIndex (ctx, (JSObjectRef) search_path_ref, i,
-				    exception);
+        JSObjectGetPropertyAtIndex (ctx, (JSObjectRef) search_path_ref, i,
+                                    exception);
       entry = seed_value_to_string (ctx, entry_ref, exception);
 
       if (g_file_test (entry, G_FILE_TEST_EXISTS) == TRUE)
@@ -638,17 +638,17 @@ seed_importer_get_search_path (JSContextRef ctx, JSValueRef * exception)
 /* forward reference */
 static JSObjectRef
 seed_importer_handle_file (JSContextRef ctx,
-			   const gchar * dir,
-			   const gchar * file, 
-			   JSValueRef * exception);
+                           const gchar * dir,
+                           const gchar * file, 
+                           JSValueRef * exception);
 
 
 
 static JSObjectRef
 seed_importer_handle_native_module (JSContextRef ctx,
-				    const gchar * dir,
-				    const gchar * prop,
-				    JSValueRef * exception)
+                                    const gchar * dir,
+                                    const gchar * prop,
+                                    JSValueRef * exception)
 {
   GModule *module;
   JSObjectRef module_obj;
@@ -670,8 +670,8 @@ seed_importer_handle_native_module (JSContextRef ctx,
     {
       // Could be a better exception
       seed_make_exception (ctx, exception, "ModuleError",
-			   "Error loading native module at %s: %s",
-			   file_path, g_module_error ());
+                           "Error loading native module at %s: %s",
+                           file_path, g_module_error ());
       g_free (file_path);
 
       return NULL;
@@ -706,8 +706,8 @@ seed_importer_canonicalize_path (gchar * path)
 
 static JSObjectRef
 seed_importer_handle_file (JSContextRef ctx,
-			   const gchar * dir,
-			   const gchar * file, JSValueRef * exception)
+                           const gchar * dir,
+                           const gchar * file, JSValueRef * exception)
 {
   JSContextRef nctx;
   JSValueRef js_file_dirname;
@@ -733,10 +733,10 @@ seed_importer_handle_file (JSContextRef ctx,
   if (!g_file_test (file_path, G_FILE_TEST_IS_REGULAR))
     {
       if (g_file_test (file_path, G_FILE_TEST_IS_DIR))
-	{
-	  SEED_NOTE (IMPORTER, "File is directory");
-	  return seed_make_importer_dir (ctx, file_path);
-	}
+        {
+          SEED_NOTE (IMPORTER, "File is directory");
+          return seed_make_importer_dir (ctx, file_path);
+        }
       return NULL;
     }
 
@@ -745,7 +745,7 @@ seed_importer_handle_file (JSContextRef ctx,
   if (*walk == '#')
     {
       while (*walk != '\n')
-	walk++;
+        walk++;
       walk++;
     }
   walk = g_strdup (walk);
@@ -766,7 +766,7 @@ seed_importer_handle_file (JSContextRef ctx,
     {
       g_free (absolute_path);
       absolute_path = g_build_filename (g_get_current_dir (),
-					g_path_get_dirname (file_path), NULL);
+                                        g_path_get_dirname (file_path), NULL);
     }
 
 #ifdef PATH_MAX
@@ -792,8 +792,8 @@ seed_importer_handle_file (JSContextRef ctx,
 
   // Does leak...but it's a debug statement.
   SEED_NOTE (IMPORTER, "Evaluated file, exception: %s",
-	     *exception ? seed_exception_to_string (ctx,
-						    *exception) : "(null)");
+             *exception ? seed_exception_to_string (ctx,
+                                                    *exception) : "(null)");
 
   JSGlobalContextRelease ((JSGlobalContextRef) nctx);
 
@@ -882,8 +882,8 @@ seed_importer_search (JSContextRef ctx, gchar *prop, JSValueRef *exception)
 
 static JSValueRef
 seed_importer_get_property (JSContextRef ctx,
-			    JSObjectRef object,
-			    JSStringRef property_name, JSValueRef * exception)
+                            JSObjectRef object,
+                            JSStringRef property_name, JSValueRef * exception)
 {
   JSValueRef ret;
   guint len;
@@ -897,7 +897,7 @@ seed_importer_get_property (JSContextRef ctx,
     return gi_importer;
   if (!g_strcmp0 (prop, "searchPath"))
     return NULL;
-  if (!g_strcmp0 (prop, "toString"))	// HACK
+  if (!g_strcmp0 (prop, "toString"))        // HACK
     return NULL;
 
   ret = seed_importer_search (ctx, prop, exception);
@@ -945,14 +945,14 @@ seed_importer_add_global (JSObjectRef global, gchar * name)
 {
   JSValueProtect (eng->context, global);
   g_hash_table_insert (file_imports, seed_importer_canonicalize_path (name),
-		       global);
+                       global);
 }
 
 static void
 seed_importer_dir_enumerate_properties (JSContextRef ctx,
-					JSObjectRef object,
-					JSPropertyNameAccumulatorRef
-					propertyNames)
+                                        JSObjectRef object,
+                                        JSPropertyNameAccumulatorRef
+                                        propertyNames)
 {
   const gchar *entry;
   GDir *dir;
@@ -964,8 +964,8 @@ seed_importer_dir_enumerate_properties (JSContextRef ctx,
   if (e)
     {
       SEED_NOTE (IMPORTER,
-		 "Error in g_dir_open in seed_importer_enumerate_dir_properties: %s",
-		 e->message);
+                 "Error in g_dir_open in seed_importer_enumerate_dir_properties: %s",
+                 e->message);
       g_error_free (e);
       // Not much we can do here.
       return;
@@ -984,16 +984,16 @@ seed_importer_dir_enumerate_properties (JSContextRef ctx,
 
 JSObjectRef
 seed_importer_construct_dir (JSContextRef ctx,
-			     JSObjectRef constructor,
-			     gsize argumentCount,
-			     const JSValueRef arguments[],
-			     JSValueRef * exception)
+                             JSObjectRef constructor,
+                             gsize argumentCount,
+                             const JSValueRef arguments[],
+                             JSValueRef * exception)
 {
   gchar *path;
   if (argumentCount != 1)
     {
       seed_make_exception (ctx, exception, "ArgumentError",
-			   "Directory constructor expects 1 argument");
+                           "Directory constructor expects 1 argument");
       return (JSObjectRef) JSValueMakeUndefined (ctx);
     }
   path = seed_value_to_string (ctx, arguments[0], exception);
@@ -1001,7 +1001,7 @@ seed_importer_construct_dir (JSContextRef ctx,
   if (!g_file_test (path, G_FILE_TEST_IS_DIR))
     {
       seed_make_exception (ctx, exception, "ArgumentError",
-			   "Path (%s) is not a directory", path);
+                           "Path (%s) is not a directory", path);
       g_free (path);
       return (JSObjectRef) JSValueMakeUndefined (ctx);
     }
@@ -1019,8 +1019,8 @@ seed_importer_set_search_path (JSContextRef ctx, gchar ** search_path)
   array_elem = g_alloca (length * sizeof (array_elem));
   imports =
     (JSObjectRef) seed_object_get_property (ctx,
-					    JSContextGetGlobalObject (ctx),
-					    "imports");
+                                            JSContextGetGlobalObject (ctx),
+                                            "imports");
 
   for (i = 0; i < length; i++)
     {
@@ -1055,63 +1055,63 @@ seed_importer_add_search_path (JSContextRef ctx, gchar *search_path)
 }
 
 JSClassDefinition importer_class_def = {
-  0,				/* Version, always 0 */
+  0,                                /* Version, always 0 */
   0,
-  "importer",			/* Class Name */
-  NULL,				/* Parent Class */
-  NULL,				/* Static Values */
-  NULL,				/* Static Functions */
-  NULL,				/* Initialize */
-  NULL,				/* Finalize */
-  NULL,				/* Has Property */
-  seed_importer_get_property,	/* Get Property */
-  NULL,				/* Set Property */
-  NULL,				/* Delete Property */
-  NULL,				/* Get Property Names */
-  NULL,				/* Call As Function */
-  NULL,				/* Call As Constructor */
-  NULL,				/* Has Instance */
-  NULL				/* Convert To Type */
+  "importer",                        /* Class Name */
+  NULL,                                /* Parent Class */
+  NULL,                                /* Static Values */
+  NULL,                                /* Static Functions */
+  NULL,                                /* Initialize */
+  NULL,                                /* Finalize */
+  NULL,                                /* Has Property */
+  seed_importer_get_property,        /* Get Property */
+  NULL,                                /* Set Property */
+  NULL,                                /* Delete Property */
+  NULL,                                /* Get Property Names */
+  NULL,                                /* Call As Function */
+  NULL,                                /* Call As Constructor */
+  NULL,                                /* Has Instance */
+  NULL                                /* Convert To Type */
 };
 
 JSClassDefinition gi_importer_class_def = {
-  0,				/* Version, always 0 */
+  0,                                /* Version, always 0 */
   0,
-  "gi_importer",		/* Class Name */
-  NULL,				/* Parent Class */
-  NULL,				/* Static Values */
-  NULL,				/* Static Functions */
-  NULL,				/* Initialize */
-  NULL,				/* Finalize */
-  NULL,				/* Has Property */
-  seed_gi_importer_get_property,	/* Get Property */
-  NULL,				/* Set Property */
-  NULL,				/* Delete Property */
-  NULL,				/* Get Property Names */
-  NULL,				/* Call As Function */
-  NULL,				/* Call As Constructor */
-  NULL,				/* Has Instance */
-  NULL				/* Convert To Type */
+  "gi_importer",                /* Class Name */
+  NULL,                                /* Parent Class */
+  NULL,                                /* Static Values */
+  NULL,                                /* Static Functions */
+  NULL,                                /* Initialize */
+  NULL,                                /* Finalize */
+  NULL,                                /* Has Property */
+  seed_gi_importer_get_property,        /* Get Property */
+  NULL,                                /* Set Property */
+  NULL,                                /* Delete Property */
+  NULL,                                /* Get Property Names */
+  NULL,                                /* Call As Function */
+  NULL,                                /* Call As Constructor */
+  NULL,                                /* Has Instance */
+  NULL                                /* Convert To Type */
 };
 
 JSClassDefinition importer_dir_class_def = {
-  0,				/* Version, always 0 */
+  0,                                /* Version, always 0 */
   0,
-  "importer_dir",		/* Class Name */
-  NULL,				/* Parent Class */
-  NULL,				/* Static Values */
-  NULL,				/* Static Functions */
-  NULL,				/* Initialize */
-  seed_importer_dir_finalize,	/* Finalize */
-  NULL,				/* Has Property */
-  seed_importer_dir_get_property,	/* Get Property */
-  NULL,				/* Set Property */
-  NULL,				/* Delete Property */
-  seed_importer_dir_enumerate_properties,	/* Get Property Names */
-  NULL,				/* Call As Function */
-  NULL,				/* Call As Constructor */
-  NULL,				/* Has Instance */
-  NULL				/* Convert To Type */
+  "importer_dir",                /* Class Name */
+  NULL,                                /* Parent Class */
+  NULL,                                /* Static Values */
+  NULL,                                /* Static Functions */
+  NULL,                                /* Initialize */
+  seed_importer_dir_finalize,        /* Finalize */
+  NULL,                                /* Has Property */
+  seed_importer_dir_get_property,        /* Get Property */
+  NULL,                                /* Set Property */
+  NULL,                                /* Delete Property */
+  seed_importer_dir_enumerate_properties,        /* Get Property Names */
+  NULL,                                /* Call As Function */
+  NULL,                                /* Call As Constructor */
+  NULL,                                /* Has Instance */
+  NULL                                /* Convert To Type */
 };
 
 void
