@@ -77,7 +77,7 @@ seed_exec (gchar * filename)
   if (*buffer == '#')
     {
       while (*buffer != '\n')
-	buffer++;
+        buffer++;
       buffer++;
     }
 
@@ -121,10 +121,10 @@ seed_exec_str ()
     {
       val_str = seed_value_to_string (eng->context, val, &e);
       if (e)
-	{
-	  g_critical ("%s", seed_exception_to_string (eng->context, e));
-	  exit (EXIT_FAILURE);
-	}
+        {
+          g_critical ("%s", seed_exception_to_string (eng->context, e));
+          exit (EXIT_FAILURE);
+        }
 
       g_print ("%s\n", val_str);
       g_free (seed_interpreter_arg_exec_string);
