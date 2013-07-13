@@ -293,7 +293,7 @@ seed_gi_importer_handle_struct (JSContextRef ctx,
 
   struct_ref = JSObjectMake (ctx, seed_struct_constructor_class, info);
   g_base_info_ref (info);
-  
+
   n_methods = g_struct_info_get_n_methods (info);
 
   for (i = 0; i < n_methods; i++)
@@ -639,7 +639,7 @@ seed_importer_get_search_path (JSContextRef ctx, JSValueRef * exception)
 static JSObjectRef
 seed_importer_handle_file (JSContextRef ctx,
                            const gchar * dir,
-                           const gchar * file, 
+                           const gchar * file,
                            JSValueRef * exception);
 
 
@@ -683,7 +683,7 @@ seed_importer_handle_native_module (JSContextRef ctx,
 
   //protect module_obj since the GC won't find the module in our file_imports cache
   JSValueProtect (ctx, module_obj);
-  
+
   file_path = g_strconcat ("libseed_", prop, ".js", NULL);
   seed_importer_handle_file (ctx, dir, file_path, exception);
   g_free (file_path);
@@ -815,7 +815,7 @@ seed_importer_search_dirs (JSContextRef ctx, GSList *path, gchar *prop, JSValueR
     prop_as_lib = g_strconcat ("libseed_", prop, ".", G_MODULE_SUFFIX, NULL);
     prop_as_js = g_strconcat (prop, ".js", NULL);
 
-    // get the current script_path      
+    // get the current script_path
     global = JSContextGetGlobalObject (ctx);
     script_path_prop = seed_object_get_property (ctx, global, "__script_path__");
     if (script_path_prop==NULL || JSValueIsUndefined (ctx, script_path_prop))
@@ -828,7 +828,7 @@ seed_importer_search_dirs (JSContextRef ctx, GSList *path, gchar *prop, JSValueR
     while (walk) {
         gchar *test_path = walk->data;
         gchar *file_path;
-        
+
         // replace '.' with current script_path if not null
         if(script_path && !g_strcmp0(".",test_path))
             test_path = script_path;
@@ -850,7 +850,7 @@ seed_importer_search_dirs (JSContextRef ctx, GSList *path, gchar *prop, JSValueR
             break;
         }
         g_free (file_path);
-      
+
         // check if file is native module
         file_path = g_build_filename (test_path, prop_as_lib, NULL);
         if (g_file_test (file_path, G_FILE_TEST_IS_REGULAR)) {
@@ -866,7 +866,7 @@ seed_importer_search_dirs (JSContextRef ctx, GSList *path, gchar *prop, JSValueR
     g_free (prop_as_lib);
     g_free (prop_as_js);
     g_free (script_path);
-    
+
     return ret;
 }
 
@@ -922,14 +922,14 @@ seed_importer_dir_get_property (JSContextRef ctx,
     prop = g_alloca (len * sizeof (gchar));
     JSStringGetUTF8CString (property_name, prop, len);
 
-    /* These prevent print(imports.somefile) running "somefile/toString.js" 
+    /* These prevent print(imports.somefile) running "somefile/toString.js"
        Which is more than a little unexpected.. */
 
     if (!g_strcmp0 (prop, "toString"))
         return NULL;
     if (!g_strcmp0 (prop, "valueOf"))
         return NULL;
-    
+
     return seed_importer_search_dirs(ctx, &path, prop, exception);
 }
 
