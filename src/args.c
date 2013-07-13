@@ -43,7 +43,7 @@ seed_interpreter_get_option_group (void)
   GOptionGroup *group;
 
   group = g_option_group_new ("seed-interpreter", "Interpreter Options",
-			      "Show Interpreter Options", NULL, NULL);
+                              "Show Interpreter Options", NULL, NULL);
   g_option_group_add_entries (group, seed_args);
 
   return group;
@@ -71,10 +71,10 @@ seed_interpreter_parse_args (int *argc, char ***argv)
   if (!g_option_context_parse (option_context, argc, argv, &error))
     {
       if (error)
-	{
-	  g_warning ("%s", error->message);
-	  g_error_free (error);
-	}
+        {
+          g_warning ("%s", error->message);
+          g_error_free (error);
+        }
 
       ret = FALSE;
     }
