@@ -31,6 +31,8 @@ JSClassRef gi_importer_class;
 JSObjectRef gi_importer;
 JSObjectRef gi_importer_versions;
 
+JSObjectRef compile;
+
 JSObjectRef importer_search_path;
 
 JSClassRef importer_dir_class;
@@ -705,6 +707,55 @@ seed_importer_canonicalize_path (gchar * path)
 }
 
 static JSObjectRef
+seed_importer_handle_source (JSContextRef ctx,
+                             JSStringRef  dir,      // not strictly necessary
+                             JSStringRef  filename, // not strictly necessary
+                             JSStringRef  source,   // mandatory
+                             JSValueRef * exception)
+{
+  // TODO: if source has to be gchar *, then just pass it here..
+  //JSStringRef source = JSStringCreateWithUTF8CString (source);
+
+  // new context
+  JSContextRef nctx;
+
+  // where is the source code from? This is actually used to construct
+  // __script_path__ but I don't presently care.
+  //JSValueRef js_file_dirname;
+
+  JSObjectRef global, c_global;
+
+  SEED_NOTE (IMPORTER, "Trying to compile/load source code.");
+
+  nctx = JSGlobalContextCreateInGroup (context_group, 0);
+  seed_prepare_global_context (nctx);
+
+  global = JSContextGetGlobalObject (nctx);
+  c_global = JSContextGetGlobalObject (ctx);
+  JSValueProtect (eng->context, global);
+
+  // TODO: include __script_path__ on the global?
+
+  // This could be cached inside the javascript layer instead.
+  //g_hash_table_insert (file_imports, canonical, global);
+
+  JSEvaluateScript (nctx, source, NULL, filename, 0, exception);
+
+  // Does leak...but it's a debug statement.
+  SEED_NOTE (IMPORTER, "Evaluated file, exception: %s",
+             *exception ? seed_exception_to_string (ctx,
+                                                    *exception) : "(null)");
+
+  JSGlobalContextRelease ((JSGlobalContextRef) nctx);
+
+  JSStringRelease (source);
+  JSStringRelease (dir);
+  JSStringRelease (filename);
+
+  return global;
+}
+
+static JSObjectRef
 seed_importer_handle_file (JSContextRef ctx,
                            const gchar * dir,
                            const gchar * file, JSValueRef * exception)
@@ -899,6 +950,9 @@ seed_importer_get_property (JSContextRef ctx,
     return NULL;
   if (!g_strcmp0 (prop, "toString"))        // HACK
     return NULL;
+
+  if (!g_strcmp0 (prop, "compile"))
+    return compile;
 
   ret = seed_importer_search (ctx, prop, exception);
 
@@ -1126,8 +1180,12 @@ seed_initialize_importer (JSContextRef ctx, JSObjectRef global)
   gi_importer = JSObjectMake (ctx, gi_importer_class, NULL);
   gi_importer_versions = JSObjectMake (ctx, NULL, NULL);
 
+  compile = JSObjectMakeFunctionWithCallback(ctx, NULL, (JSObjectCallAsFunctionCallback)seed_importer_handle_source);
+
   JSValueProtect (ctx, gi_importer);
   JSValueProtect (ctx, gi_importer_versions);
+
+  JSValueProtect (ctx, compile);
 
   importer_dir_class = JSClassCreate (&importer_dir_class_def);
 
